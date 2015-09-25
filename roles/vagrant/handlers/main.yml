@@ -1,0 +1,4 @@
+---
+# file: roles/vagrant/handlers/main.yml
+- name: libvirtd restart
+  service: name=libvirtd state=restarted

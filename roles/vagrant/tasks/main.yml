@@ -1,0 +1,36 @@
+---
+# file: roles/common/tasks/main.yml
+
+- name: libvirt packages install
+  yum: name={{item}} state=present
+  with_items:
+    - libvirt-devel
+    - kernel-devel
+    - gcc
+
+- name: virtualbox install check
+  command: rpm -q VirtualBox-5.0
+  register: is_virtualbox_installed
+  failed_when: is_virtualbox_installed.rc not in [0,1]
+  changed_when: is_virtualbox_installed.rc != 0
+
+- name: virtualbox packages install
+  yum: name="{{virtualbox_package}}" state=present
+  when: is_virtualbox_installed.rc != 0
+
+- name: vagrant install check
+  command: rpm -q vagrant
+  register: is_vagrant_installed
+  failed_when: is_vagrant_installed.rc not in [0,1]
+  changed_when: is_vagrant_installed.rc != 0
+
+- name: vagrant packages install
+  yum: name="{{vagrant_package}}" state=present
+  when: is_vagrant_installed.rc != 0
+
+- name: add libvirt group.
+  group: name=libvirt gid=900 state=present
+
+- name: libvirtd settings.
+  template: src=libvirtd.conf.j2 dest=/etc/libvirt/libvirtd.conf owner=root group=root mode=644
+  notify: libvirtd restart
